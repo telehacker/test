@@ -491,39 +491,87 @@
         }
 
         // --- YEH HAI MAGIC FUNCTION ---
-        function loadQ(idx) {
-            currentQuestionIndex = idx;
-            const q = questions[idx];
-            
-            if (status[q.id] === 'not-visited') status[q.id] = 'visited';
-            
-            document.getElementById('q-num').innerText = `Question ${idx + 1}`;
-            document.getElementById('q-type').innerText = q.type;
-            
-            // Image Processing Logic
-            const imgContainer = document.getElementById('q-img-container');
-            if(imgContainer) imgContainer.innerHTML = ''; // Clear old image
-            
-            let displayText = q.text;
-            
-            // Ye check karega ki kya text ke shuru mein [https://...](https://...) hai?
-            const linkMatch = displayText.match(/^\[(https?:\/\/[^\]]+)\]/);
-            
-            if (linkMatch) {
-                // Agar link mila, to usko nikal kar image bana do
-                const imgUrl = linkMatch[1];
+    function loadQ(idx) {
+        currentQuestionIndex = idx;
+        const q = questions[idx];
+        
+        // Status update
+        if (status[q.id] === 'not-visited') status[q.id] = 'visited';
+        
+        // Header update
+        document.getElementById('q-num').innerText = `Question ${idx + 1}`;
+        document.getElementById('q-type').innerText = q.type;
+        
+        // --- QUESTION IMAGE ---
+        const imgContainer = document.getElementById('q-img-container');
+        if(imgContainer) imgContainer.innerHTML = ''; 
+        
+        let displayText = q.text;
+        let qImageUrl = q.img || "";
+
+        // Question text se link nikalna ( [url] pattern )
+        const linkMatch = displayText.match(/\[(https?:\/\/[^\]]+)\]/);
+        if (linkMatch) {
+            qImageUrl = linkMatch[1];
+            displayText = displayText.replace(linkMatch[0], "").trim();
+        }
+
+        if (qImageUrl && imgContainer) {
+            const img = document.createElement('img');
+            img.src = qImageUrl;
+            img.className = 'q-img';
+            img.style.maxWidth = "100%";
+            img.style.maxHeight = "350px"; // Size control
+            img.style.display = "block";
+            img.style.margin = "10px auto";
+            imgContainer.appendChild(img);
+        }
+
+        document.getElementById('q-content').innerHTML = displayText;
+        
+        // --- OPTIONS IMAGE & RENDERING ---
+        const optsDiv = document.getElementById('options-area');
+        optsDiv.innerHTML = '';
+        const saved = responses[q.id] || '';
+
+        if (q.type === 'MCQ') {
+            Object.entries(q.opts).forEach(([key, val]) => {
+                const checked = saved === key ? 'checked' : '';
                 
-                // Image element create karo
-                if(imgContainer) {
-                    const img = document.createElement('img');
-                    img.src = imgUrl;
-                    img.className = 'q-img';
-                    img.style.maxWidth = "100%";
-                    img.style.maxHeight = "350px";
-                    img.style.display = "block";
-                    img.style.margin = "10px 0";
-                    img.style.border = "1px solid #ccc";
-                    imgContainer.appendChild(img);
+                // Option text se link nikalna
+                let optText = val;
+                let optImgHTML = "";
+                
+                // Regex to find link inside brackets [http...]
+                const optLinkMatch = val.match(/\[(https?:\/\/[^\]]+)\]/);
+                if (optLinkMatch) {
+                    const optImgUrl = optLinkMatch[1];
+                    optText = val.replace(optLinkMatch[0], "").trim();
+                    // Image HTML banao
+                    optImgHTML = `<div style="margin-top:5px;"><img src="${optImgUrl}" style="max-height:150px; max-width:100%; border:1px solid #ccc; border-radius:4px;"></div>`;
+                }
+
+                optsDiv.innerHTML += `
+                <label class="option-item" style="align-items: flex-start;">
+                    <div style="padding-top:2px;"><input type="radio" name="opt" value="${key}" ${checked}></div>
+                    <div style="margin-left: 10px;">
+                        <strong>(${key})</strong> ${optText}
+                        ${optImgHTML}
+                    </div>
+                </label>`;
+            });
+        } else {
+            optsDiv.innerHTML = `
+            <div class="integer-box">
+                <label>Ans.</label>
+                <input type="text" id="int-input" value="${saved}">
+            </div>`;
+        }
+
+        // MathJax refresh
+        if (window.MathJax) MathJax.typesetPromise();
+        updatePalette();
+    }
                 }
                 
                 // Text me se link hata do taki wo dubara na dikhe
