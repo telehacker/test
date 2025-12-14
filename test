@@ -780,8 +780,17 @@ function loginWithAttempts() {
     }
 
     // 7. Screen Switch karo
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('test-ui').style.display = 'flex';
+   document.getElementById('login-screen').style.display = 'none';
+document.getElementById('test-ui').style.display = 'flex';
+
+// Ensure data is ready
+if (typeof allQuestions !== 'undefined' && allQuestions.length > 0) {
+    currentSubject = "Physics"; // Default subject set karein
+    renderPalette(); // Palette banayein
+    loadQuestion(0); // Pehla question load karein
+} else {
+    console.error("Questions not loaded yet!");
+}
 
 // 8. Timer Start karo
     startTimer();
