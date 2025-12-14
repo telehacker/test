@@ -63,46 +63,31 @@
         .login-card button:hover { background: #0056b3; }
 
         /* --- Header --- */
-      header {
-    display: flex;
-    justify-content: space-between; /* Teeno cheezein fail jayengi */
-    align-items: center;
-    padding: 0 20px;
-    height: 60px;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    position: relative;
-    z-index: 100;
-}
-
-.brand {
-    font-weight: bold;
-    font-size: 1.2rem;
-    color: #007bff;
-    flex: 1; /* Left space lega */
+      /* --- Header Override --- */
+header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 0 20px !important;
+    height: 70px !important;
+    background: #fff !important;
+    border-bottom: 2px solid #007bff !important;
 }
 
 .timer {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #28a745; /* Green color */
-    background: #f8f9fa;
-    padding: 5px 15px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    flex: 0 0 auto; /* Center mein fix rahega */
-    position: absolute; /* Absolute taaki wo bilkul center mein rahe */
-    left: 50%;
-    transform: translateX(-50%);
+    position: static !important; /* Absolute hata diya taaki corner mein jaye */
+    transform: none !important;
+    margin-bottom: 4px;
+    background: #28a745;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
 }
 
 .candidate-profile {
     display: flex;
-    justify-content: flex-end; /* Bilkul right side chipkega */
+    flex-direction: row;
     align-items: center;
-    gap: 12px;
-    min-width: 200px; /* Thodi jagah reserve karega taaki timer se na takraye */
 }
 
 /* Naam ka text thoda bada aur saaf dikhane ke liye */
@@ -276,21 +261,27 @@
 
     <!-- Main Interface -->
     <div id="test-ui" style="display: none; height: 100%; flex-direction: column;">
-        <header>
-    <!-- Brand -->
+       <header>
+    <!-- Left: Brand Name -->
     <div class="brand">JEE MAIN CATALYST SERIES</div>
 
-    <!-- Timer -->
-    <div class="timer" id="timer">03:00:00</div>
-    
-    <!-- Candidate Profile (Isse Timer se BAHAR hona chahiye, alag div mein) -->
-    <div class="candidate-profile">
-        <div style="text-align: right;">
-            <span style="display: block; font-size: 11px; color: #666;">Candidate Name:</span>
-            <span id="displayCandidateName" style="display: block; font-size: 14px; font-weight: bold; color: #333;">Student</span>
-        </div>
-        <div style="width: 35px; height: 35px; background: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #ccc;">
-            <img src="https://via.placeholder.com/40" alt="User" style="width: 100%; height: 100%; object-fit: cover;">
+    <!-- Right Side: Timer & Candidate Info (Ek container mein) -->
+    <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; height: 100%;">
+        
+        <!-- Timer (Upar) -->
+        <div class="timer" id="timer" style="margin-bottom: 5px;">03:00:00</div>
+        
+        <!-- Candidate Profile (Niche) -->
+        <div class="candidate-profile">
+            <span style="font-size: 11px; color: #666; margin-right: 5px;">Candidate:</span>
+            <span id="displayCandidateName" style="font-size: 14px; font-weight: bold; color: #333; margin-right: 8px;">Student</span>
+            
+            <!-- Logo Icon -->
+            <div style="width: 25px; height: 25px; background: #007bff; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
+                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                </svg>
+            </div>
         </div>
     </div>
 </header>
