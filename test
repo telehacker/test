@@ -783,9 +783,14 @@ function loginWithAttempts() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('test-ui').style.display = 'flex';
 
-    // 8. Timer Start karo
+// 8. Timer Start karo
     startTimer();
 
+    // --- NEW FIX: Force Load First Question ---
+    changeSubject('Physics'); // Ya jo bhi aapka pehla subject hai
+    loadQuestion(0);
+    // ------------------------------------------
+    
     // 9. Welcome Message
     alert("Welcome " + nameInput + "!\nAttempt " + (attempts + 1) + " of 2");
 }
