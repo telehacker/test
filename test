@@ -756,7 +756,7 @@ function loginWithAttempts() {
 
     // 8. Test Shuru karne wala function call karo (agar pehle se bana hai)
     // Agar aapke code mein 'startTimer()' naam ka function hai toh niche wali line se '//' hata dein
-    // startTimer(); 
+    startTimer(); 
 
     alert("Welcome " + nameInput + "!\nThis is your Attempt #" + (attempts + 1) + " of 2");
 }
