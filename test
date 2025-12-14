@@ -232,8 +232,9 @@
         <div class="login-card">
             <h2>JEE Main Portal</h2>
             <p>Enter Password to Begin</p>
-            <input type="password" id="pass" placeholder="Password">
-            <button onclick="login()">Start Test</button>
+           <input type="text" id="studentNameInput" placeholder="Enter Your Full Name" style="padding: 10px; width: 80%; margin-bottom: 10px; display: block; margin: 10px auto;">
+<input type="password" id="pass" placeholder="Password" style="padding: 10px; width: 80%; margin-bottom: 10px; display: block; margin: 10px auto;">
+            <button onclick="loginWithAttempts()">Start Test</button>
             <div style="margin-top: 15px; font-size: 0.8rem; color: #aaa;">
                 Made by Vivek | @Ruhvaan
             </div>
