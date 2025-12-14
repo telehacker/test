@@ -98,11 +98,19 @@
 }
 
 .candidate-profile {
-    flex: 1; /* Right space lega */
     display: flex;
-    justify-content: flex-end; /* Right side chipkega */
+    justify-content: flex-end; /* Bilkul right side chipkega */
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    min-width: 200px; /* Thodi jagah reserve karega taaki timer se na takraye */
+}
+
+/* Naam ka text thoda bada aur saaf dikhane ke liye */
+#displayCandidateName {
+    font-size: 16px; 
+    font-weight: 700; 
+    color: #333;
+    text-transform: capitalize; /* Pehla letter capital */
 }
 
         /* --- Main Layout --- */
@@ -741,53 +749,54 @@ function loginWithAttempts() {
     var nameInput = document.getElementById('studentNameInput').value.trim();
     var passInput = document.getElementById('pass').value.trim();
 
-    // 2. Check karo naam aur password sahi hai ya nahi
+    // 2. Check karo naam aur password
     if (!nameInput) {
         alert("Please enter your Full Name.");
         return;
     }
 
-    // Password "12345" hai (aap badal sakte hain)
+    // Password aapne 'Ruhvaan' set kiya hai
     if (passInput !== "Ruhvaan") {
-        alert("Incorrect Password! Try '12345'");
+        alert("Incorrect Password!");
         return;
     }
 
-    // 3. Check karo kitne attempt ho chuke hain
-    // Har student ke naam ke hisaab se alag memory banegi
+    // 3. Attempt Limit Check
     var storageKey = 'attempts_' + nameInput.toLowerCase().replace(/\s/g, '');
     var attempts = localStorage.getItem(storageKey);
+    attempts = attempts ? parseInt(attempts) : 0;
 
-    if (attempts === null) {
-        attempts = 0;
-    } else {
-        attempts = parseInt(attempts);
-    }
-
-    // 4. Agar 2 attempt pure ho gaye hain toh roko
     if (attempts >= 2) {
-        alert("🚫 ACCESS DENIED\n\nSorry " + nameInput + ", you have already used your 2 attempts.");
+        alert("🚫 ACCESS DENIED\nSorry " + nameInput + ", you have already used your 2 attempts.");
         return;
     }
 
-    // 5. Agar sab sahi hai, toh attempt count badhao
+    // 4. Attempt Save karo
     localStorage.setItem(storageKey, attempts + 1);
 
-    // 6. Header mein naam set karo
+    // 5. Header mein Naam Update karo
     var nameDisplay = document.getElementById('displayCandidateName');
     if (nameDisplay) {
         nameDisplay.innerText = nameInput;
     }
 
-    // 7. Login screen hatao aur Test dikhao
+    // 6. Full Screen Request (User interaction ke andar hi hona chahiye)
+    var elem = document.documentElement;
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(err => console.log(err));
+    } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen();
+    }
+
+    // 7. Screen Switch karo
     document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('test-ui').style.display = 'flex'; // Flex isliye taaki design na bigde
+    document.getElementById('test-ui').style.display = 'flex';
 
-    // 8. Test Shuru karne wala function call karo (agar pehle se bana hai)
-    // Agar aapke code mein 'startTimer()' naam ka function hai toh niche wali line se '//' hata dein
-    startTimer(); 
+    // 8. Timer Start karo
+    startTimer();
 
-    alert("Welcome " + nameInput + "!\nThis is your Attempt #" + (attempts + 1) + " of 2");
+    // 9. Welcome Message
+    alert("Welcome " + nameInput + "!\nAttempt " + (attempts + 1) + " of 2");
 }
     </script>
 </body>
