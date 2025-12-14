@@ -411,15 +411,22 @@
             { id: 75, subject: "Mathematics", type: "INTEGER", ans: "2", text: "Let \\(I_n = \\int_0^1 x^n \\tan^{-1}x dx\\). If \\(aI_{n+2} + bI_n = c_n\\) is a recurrence relation where a, b are integers and \\(c_n\\) depends on n, then the value of \\(a+b\\) is:", opts: {} }
         ];
 
+        // Aapne jo links dale hain, wo yahan automatic kaam karenge.
+        // Aapko array change karne ki zarurat nahi hai.
+        
         // --- Logic ---
         let currentSubjectIndex = 0;
-        let currentQuestionIndex = 0; // Index within the filtered subject array
-        let questions = []; // This will hold questions for the current subject
-        let responses = {}; // { id: value }
-        let status = {}; // { id: 'marked' | 'visited' | 'not-visited' }
+        let currentQuestionIndex = 0;
+        let questions = []; // Filters based on subject
+        let responses = {}; 
+        let status = {}; 
         let timerTime = 180 * 60; // 3 HOURS
         let interval;
         let examActive = false;
+
+        // Aapka wahi data (Jisme aapne links dale hain)
+        // NOTE: Aapne jo upar screenshot mein data dikhaya hai, wo wahin rehne dein.
+        // Bas niche wala function 'loadQ' badal gaya hai.
 
         function login() {
             if (document.getElementById('pass').value === "Ruhvaan") {
@@ -429,7 +436,7 @@
                 document.documentElement.requestFullscreen().catch(e => {});
                 
                 initStatus();
-                switchSubject(0); // Start with Physics
+                switchSubject(0);
                 
                 interval = setInterval(() => {
                     timerTime--;
@@ -445,22 +452,25 @@
         }
         
         function initStatus() {
-            allQuestions.forEach(q => {
-                status[q.id] = 'not-visited';
-            });
+            // allQuestions aapke purane variable ka naam hona chahiye
+            if(typeof allQuestions !== 'undefined') {
+                allQuestions.forEach(q => { status[q.id] = 'not-visited'; });
+            }
         }
         
         function switchSubject(subjectIndex) {
             currentSubjectIndex = subjectIndex;
             const subjectName = ["Physics", "Chemistry", "Mathematics"][subjectIndex];
-            questions = allQuestions.filter(q => q.subject === subjectName);
+            // Yahan check karein ki data "allQuestions" variable mein hai ya "questions" mein
+            // Screenshot ke hisab se aapne 'const allQuestions = [...]' likha hai.
+            questions = allQuestions.filter(q => (q.subject === subjectName) || (q.subject === "Maths" && subjectName === "Mathematics"));
             
             document.querySelectorAll('.sub-tab').forEach((tab, i) => {
                 tab.classList.toggle('active', i === subjectIndex);
             });
             
             initPalette();
-            loadQ(0); // Load first question of the new subject
+            loadQ(0);
         }
 
         function initPalette() {
@@ -477,24 +487,60 @@
             updatePalette();
         }
 
+        // --- YEH HAI MAGIC FUNCTION ---
         function loadQ(idx) {
             currentQuestionIndex = idx;
             const q = questions[idx];
             
-            if (status[q.id] === 'not-visited') {
-                 status[q.id] = 'visited';
-            }
+            if (status[q.id] === 'not-visited') status[q.id] = 'visited';
             
             document.getElementById('q-num').innerText = `Question ${idx + 1}`;
             document.getElementById('q-type').innerText = q.type;
-            document.getElementById('q-marks').innerText = q.type === 'MCQ' ? '(+4, -1)' : '(+4, 0)';
             
-            const contentDiv = document.getElementById('q-content');
-            contentDiv.innerHTML = q.text;
+            // Image Processing Logic
+            const imgContainer = document.getElementById('q-img-container');
+            if(imgContainer) imgContainer.innerHTML = ''; // Clear old image
+            
+            let displayText = q.text;
+            
+            // Ye check karega ki kya text ke shuru mein [https://...](https://...) hai?
+            const linkMatch = displayText.match(/^\[(https?:\/\/[^\]]+)\]/);
+            
+            if (linkMatch) {
+                // Agar link mila, to usko nikal kar image bana do
+                const imgUrl = linkMatch[1];
+                
+                // Image element create karo
+                if(imgContainer) {
+                    const img = document.createElement('img');
+                    img.src = imgUrl;
+                    img.className = 'q-img';
+                    img.style.maxWidth = "100%";
+                    img.style.maxHeight = "350px";
+                    img.style.display = "block";
+                    img.style.margin = "10px 0";
+                    img.style.border = "1px solid #ccc";
+                    imgContainer.appendChild(img);
+                }
+                
+                // Text me se link hata do taki wo dubara na dikhe
+                displayText = displayText.replace(linkMatch[0], "").trim();
+            } else if (q.img) {
+                // Agar aapne naye format me img: "" use kiya hai
+                 if(imgContainer) {
+                    const img = document.createElement('img');
+                    img.src = q.img;
+                    img.className = 'q-img';
+                    img.style.maxWidth = "100%";
+                    img.style.maxHeight = "350px";
+                    imgContainer.appendChild(img);
+                 }
+            }
+
+            document.getElementById('q-content').innerHTML = displayText;
             
             const optsDiv = document.getElementById('options-area');
             optsDiv.innerHTML = '';
-            
             const saved = responses[q.id] || '';
 
             if (q.type === 'MCQ') {
@@ -521,7 +567,6 @@
         function saveNext() {
             const q = questions[currentQuestionIndex];
             let val = null;
-            
             if (q.type === 'MCQ') {
                 const el = document.querySelector('input[name="opt"]:checked');
                 if (el) val = el.value;
@@ -532,11 +577,8 @@
 
             if (val) {
                 responses[q.id] = val;
-                if (status[q.id] !== 'marked') {
-                    status[q.id] = 'answered';
-                }
+                if (status[q.id] !== 'marked') status[q.id] = 'answered';
             }
-            
             nav(1);
         }
 
@@ -566,52 +608,37 @@
         function updatePalette() {
             questions.forEach((q) => {
                 const btn = document.getElementById(`pal-${q.id}`);
-                btn.className = 'p-btn'; // reset
-                
-                if (q.id === questions[currentQuestionIndex].id) btn.classList.add('current');
-                
-                const s = status[q.id];
-                if (s === 'answered') {
-                    btn.classList.add('answered');
-                } else if (s === 'marked') {
-                    btn.classList.add('marked');
-                } else if (s === 'visited') {
-                    btn.classList.add('not-ans');
+                if(btn) {
+                    btn.className = 'p-btn';
+                    if (q.id === questions[currentQuestionIndex].id) btn.classList.add('current');
+                    
+                    const s = status[q.id];
+                    if (s === 'answered') btn.classList.add('answered');
+                    else if (s === 'marked') btn.classList.add('marked');
+                    else if (s === 'visited') btn.classList.add('not-ans');
                 }
             });
         }
 
         function submitTest(force = false) {
             if (!force && !confirm("Are you sure you want to submit?")) return;
-            
-            examActive = false; // Disable anti-cheat
+            examActive = false;
             clearInterval(interval);
             document.getElementById('test-ui').style.display = 'none';
             document.getElementById('score-card').style.display = 'flex';
             document.exitFullscreen().catch(e=>{});
 
-            // Calc Score
-            let correct = 0;
-            let wrong = 0;
-            let attempted = 0;
-            
+            let correct = 0, wrong = 0, attempted = 0;
             allQuestions.forEach(q => {
                 const userAns = responses[q.id];
                 if (userAns) {
                     attempted++;
-                    if (userAns.toString().trim().toLowerCase() === q.ans.toString().trim().toLowerCase()) {
-                        correct++;
-                    } else {
-                        // Section B has 0 marks for wrong answer
-                        if (q.type === 'MCQ') {
-                           wrong++;
-                        }
-                    }
+                    if (userAns.toString().trim().toLowerCase() === q.ans.toString().trim().toLowerCase()) correct++;
+                    else if (q.type === 'MCQ') wrong++;
                 }
             });
 
             const totalScore = (correct * 4) - (wrong * 1);
-            const maxScore = allQuestions.length * 4;
             const accuracy = attempted ? ((correct / attempted) * 100).toFixed(1) : 0;
 
             document.getElementById('final-score').innerText = totalScore;
@@ -621,11 +648,8 @@
             document.getElementById('accuracy').innerText = accuracy + '%';
         }
 
-        // Anti-cheat warning
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden && examActive) {
-                alert("WARNING: Tab switch detected! Your test is monitored.");
-            }
+            if (document.hidden && examActive) alert("WARNING: Tab switch detected! Your test is monitored.");
         });
     </script>
 </body>
