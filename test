@@ -705,6 +705,61 @@
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && examActive) alert("WARNING: Tab switch detected! Your test is monitored.");
     });
+// --- YEH CODE SCRIPT KE ANDAR PASTE KAREIN ---
+
+function loginWithAttempts() {
+    // 1. Inputs ki value uthao
+    var nameInput = document.getElementById('studentNameInput').value.trim();
+    var passInput = document.getElementById('pass').value.trim();
+
+    // 2. Check karo naam aur password sahi hai ya nahi
+    if (!nameInput) {
+        alert("Please enter your Full Name.");
+        return;
+    }
+
+    // Password "12345" hai (aap badal sakte hain)
+    if (passInput !== "Ruhvaan") {
+        alert("Incorrect Password! Try '12345'");
+        return;
+    }
+
+    // 3. Check karo kitne attempt ho chuke hain
+    // Har student ke naam ke hisaab se alag memory banegi
+    var storageKey = 'attempts_' + nameInput.toLowerCase().replace(/\s/g, '');
+    var attempts = localStorage.getItem(storageKey);
+
+    if (attempts === null) {
+        attempts = 0;
+    } else {
+        attempts = parseInt(attempts);
+    }
+
+    // 4. Agar 2 attempt pure ho gaye hain toh roko
+    if (attempts >= 2) {
+        alert("🚫 ACCESS DENIED\n\nSorry " + nameInput + ", you have already used your 2 attempts.");
+        return;
+    }
+
+    // 5. Agar sab sahi hai, toh attempt count badhao
+    localStorage.setItem(storageKey, attempts + 1);
+
+    // 6. Header mein naam set karo
+    var nameDisplay = document.getElementById('displayCandidateName');
+    if (nameDisplay) {
+        nameDisplay.innerText = nameInput;
+    }
+
+    // 7. Login screen hatao aur Test dikhao
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('test-ui').style.display = 'flex'; // Flex isliye taaki design na bigde
+
+    // 8. Test Shuru karne wala function call karo (agar pehle se bana hai)
+    // Agar aapke code mein 'startTimer()' naam ka function hai toh niche wali line se '//' hata dein
+    // startTimer(); 
+
+    alert("Welcome " + nameInput + "!\nThis is your Attempt #" + (attempts + 1) + " of 2");
+}
     </script>
 </body>
 </html>
