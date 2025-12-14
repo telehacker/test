@@ -557,8 +557,29 @@ header {
         
         // Update Header
         const qNumEl = document.getElementById('q-num');
-        const qTypeEl = document.getElementById('q-type');
-        if(qNumEl) qNumEl.innerText = `Question ${idx + 1}`;
+        // ... Upar wala code ...
+const qTypeEl = document.getElementById('q-type');
+
+// --- ISKE NEECHE PASTE KAREIN ---
+if (qTypeEl) {
+    if (q.type === 'INTEGER' || q.type === 'NUMERICAL') {
+        qTypeEl.innerText = `${q.type} (+4, 0)`;
+        qTypeEl.style.background = "#ffc107"; // Yellow
+        qTypeEl.style.color = "black";
+    } else {
+        qTypeEl.innerText = `${q.type} (+4, -1)`;
+        qTypeEl.style.background = "#0d6efd"; // Blue
+        qTypeEl.style.color = "white";
+    }
+    // Style thoda sundar banane ke liye
+    qTypeEl.style.padding = "4px 10px";
+    qTypeEl.style.borderRadius = "4px";
+    qTypeEl.style.fontSize = "0.9rem";
+    qTypeEl.style.fontWeight = "bold";
+}
+// --------------------------------
+
+if(qNumEl) qNumEl.innerText = `Question ${idx + 1}`;
         if(qTypeEl) qTypeEl.innerText = q.type;
         
         // --- 1. QUESTION IMAGE LOGIC ---
@@ -710,11 +731,19 @@ header {
         if(typeof allQuestions !== 'undefined') {
             allQuestions.forEach(q => {
                 const userAns = responses[q.id];
-                if (userAns) {
-                    attempted++;
-                    if (userAns.toString().trim().toLowerCase() === q.ans.toString().trim().toLowerCase()) correct++;
-                    else if (q.type === 'MCQ') wrong++;
+                            if (userAns) {
+                attempted++;
+                // Case-insensitive comparison for answers
+                if (userAns.toString().trim().toLowerCase() === q.ans.toString().trim().toLowerCase()) {
+                    correct++;
+                } 
+                // Sirf MCQ ke liye negative marking karo, Integer ke liye nahi
+                else if (q.type === 'MCQ') {
+                    wrong++;
                 }
+                // Integer type hai aur galat hai, toh kuch mat karo (No negative marking)
+            }
+
             });
         }
 
