@@ -414,70 +414,82 @@
             { id: 75, subject: "Mathematics", type: "INTEGER", ans: "2", text: "Let \\(I_n = \\int_0^1 x^n \\tan^{-1}x dx\\). If \\(aI_{n+2} + bI_n = c_n\\) is a recurrence relation where a, b are integers and \\(c_n\\) depends on n, then the value of \\(a+b\\) is:", opts: {} }
         ];
 
-        // Aapne jo links dale hain, wo yahan automatic kaam karenge.
-        // Aapko array change karne ki zarurat nahi hai.
-        
-        // --- Logic ---
-        let currentSubjectIndex = 0;
-        let currentQuestionIndex = 0;
-        let questions = []; // Filters based on subject
-        let responses = {}; 
-        let status = {}; 
-        let timerTime = 180 * 60; // 3 HOURS
-        let interval;
-        let examActive = false;
+            // --- LOGIC STARTS HERE (Paste this below your questions array) ---
 
-        // Aapka wahi data (Jisme aapne links dale hain)
-        // NOTE: Aapne jo upar screenshot mein data dikhaya hai, wo wahin rehne dein.
-        // Bas niche wala function 'loadQ' badal gaya hai.
+    // Global Variables
+    let currentSubjectIndex = 0;
+    let currentQuestionIndex = 0;
+    let questions = []; 
+    let responses = {}; 
+    let status = {}; 
+    let timerTime = 180 * 60; // 3 HOURS
+    let interval;
+    let examActive = false;
 
-        function login() {
-            if (document.getElementById('pass').value === "Ruhvaan") {
-                examActive = true;
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('test-ui').style.display = 'flex';
-                document.documentElement.requestFullscreen().catch(e => {});
-                
-                initStatus();
-                switchSubject(0);
-                
-                interval = setInterval(() => {
-                    timerTime--;
-                    let h = Math.floor(timerTime / 3600).toString().padStart(2, '0');
-                    let m = Math.floor((timerTime % 3600) / 60).toString().padStart(2, '0');
-                    let s = (timerTime % 60).toString().padStart(2, '0');
-                    document.getElementById('timer').innerText = `${h}:${m}:${s}`;
-                    if (timerTime <= 0) submitTest(true);
-                }, 1000);
-            } else {
-                alert("Incorrect Password!");
-            }
-        }
-        
-        function initStatus() {
-            // allQuestions aapke purane variable ka naam hona chahiye
-            if(typeof allQuestions !== 'undefined') {
-                allQuestions.forEach(q => { status[q.id] = 'not-visited'; });
-            }
-        }
-        
-        function switchSubject(subjectIndex) {
-            currentSubjectIndex = subjectIndex;
-            const subjectName = ["Physics", "Chemistry", "Mathematics"][subjectIndex];
-            // Yahan check karein ki data "allQuestions" variable mein hai ya "questions" mein
-            // Screenshot ke hisab se aapne 'const allQuestions = [...]' likha hai.
-            questions = allQuestions.filter(q => (q.subject === subjectName) || (q.subject === "Maths" && subjectName === "Mathematics"));
+    // Login Function
+    function login() {
+        // Password check
+        if (document.getElementById('pass').value === "Ruhvaan") {
+            examActive = true;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('test-ui').style.display = 'flex';
             
-            document.querySelectorAll('.sub-tab').forEach((tab, i) => {
-                tab.classList.toggle('active', i === subjectIndex);
+            // Try fullscreen
+            try {
+                document.documentElement.requestFullscreen().catch(e => console.log("Fullscreen blocked"));
+            } catch(err) {}
+            
+            initStatus();
+            switchSubject(0); // Start with Physics
+            
+            // Timer Start
+            interval = setInterval(() => {
+                timerTime--;
+                let h = Math.floor(timerTime / 3600).toString().padStart(2, '0');
+                let m = Math.floor((timerTime % 3600) / 60).toString().padStart(2, '0');
+                let s = (timerTime % 60).toString().padStart(2, '0');
+                document.getElementById('timer').innerText = `${h}:${m}:${s}`;
+                if (timerTime <= 0) submitTest(true);
+            }, 1000);
+        } else {
+            alert("Incorrect Password!");
+        }
+    }
+    
+    // Initialize Status
+    function initStatus() {
+        if(typeof allQuestions !== 'undefined') {
+            allQuestions.forEach(q => { status[q.id] = 'not-visited'; });
+        }
+    }
+    
+    // Switch Subject
+    function switchSubject(subjectIndex) {
+        currentSubjectIndex = subjectIndex;
+        const subjectName = ["Physics", "Chemistry", "Mathematics"][subjectIndex]; // Maths spelling fix
+        
+        if (typeof allQuestions !== 'undefined') {
+             questions = allQuestions.filter(q => {
+                // Handle Maths/Mathematics spelling
+                if (subjectIndex === 2) return q.subject === "Maths" || q.subject === "Mathematics";
+                return q.subject === subjectName;
             });
-            
-            initPalette();
-            loadQ(0);
         }
+        
+        // Update Tabs
+        document.querySelectorAll('.sub-tab').forEach((tab, i) => {
+            if(tab) tab.classList.toggle('active', i === subjectIndex);
+        });
+        
+        initPalette();
+        if(questions.length > 0) loadQ(0);
+        else alert("No questions found for " + subjectName);
+    }
 
-        function initPalette() {
-            const p = document.getElementById('palette');
+    // Palette
+    function initPalette() {
+        const p = document.getElementById('palette');
+        if(p) {
             p.innerHTML = '';
             questions.forEach((q, i) => {
                 const btn = document.createElement('div');
@@ -489,39 +501,45 @@
             });
             updatePalette();
         }
+    }
 
-        // --- YEH HAI MAGIC FUNCTION ---
+    // --- MAIN LOAD QUESTION FUNCTION (FIXED) ---
     function loadQ(idx) {
         currentQuestionIndex = idx;
         const q = questions[idx];
+        if(!q) return;
         
         // Status update
         if (status[q.id] === 'not-visited') status[q.id] = 'visited';
         
-        // Header update
-        document.getElementById('q-num').innerText = `Question ${idx + 1}`;
-        document.getElementById('q-type').innerText = q.type;
+        // Update Header
+        const qNumEl = document.getElementById('q-num');
+        const qTypeEl = document.getElementById('q-type');
+        if(qNumEl) qNumEl.innerText = `Question ${idx + 1}`;
+        if(qTypeEl) qTypeEl.innerText = q.type;
         
-        // --- QUESTION IMAGE ---
+        // --- 1. QUESTION IMAGE LOGIC ---
         const imgContainer = document.getElementById('q-img-container');
         if(imgContainer) imgContainer.innerHTML = ''; 
         
         let displayText = q.text;
         let qImageUrl = q.img || "";
 
-        // Question text se link nikalna ( [url] pattern )
+        // Text me se [link] dhundo
         const linkMatch = displayText.match(/\[(https?:\/\/[^\]]+)\]/);
         if (linkMatch) {
             qImageUrl = linkMatch[1];
             displayText = displayText.replace(linkMatch[0], "").trim();
         }
 
+        // Image dikhao
         if (qImageUrl && imgContainer) {
             const img = document.createElement('img');
             img.src = qImageUrl;
             img.className = 'q-img';
             img.style.maxWidth = "100%";
-            img.style.maxHeight = "350px"; // Size control
+            img.style.maxHeight = "350px";
+            img.style.border = "1px solid #ddd";
             img.style.display = "block";
             img.style.margin = "10px auto";
             imgContainer.appendChild(img);
@@ -529,38 +547,39 @@
 
         document.getElementById('q-content').innerHTML = displayText;
         
-        // --- OPTIONS IMAGE & RENDERING ---
+        // --- 2. OPTIONS LOGIC ---
         const optsDiv = document.getElementById('options-area');
         optsDiv.innerHTML = '';
         const saved = responses[q.id] || '';
 
         if (q.type === 'MCQ') {
-            Object.entries(q.opts).forEach(([key, val]) => {
-                const checked = saved === key ? 'checked' : '';
-                
-                // Option text se link nikalna
-                let optText = val;
-                let optImgHTML = "";
-                
-                // Regex to find link inside brackets [http...]
-                const optLinkMatch = val.match(/\[(https?:\/\/[^\]]+)\]/);
-                if (optLinkMatch) {
-                    const optImgUrl = optLinkMatch[1];
-                    optText = val.replace(optLinkMatch[0], "").trim();
-                    // Image HTML banao
-                    optImgHTML = `<div style="margin-top:5px;"><img src="${optImgUrl}" style="max-height:150px; max-width:100%; border:1px solid #ccc; border-radius:4px;"></div>`;
-                }
+            if(q.opts) {
+                Object.entries(q.opts).forEach(([key, val]) => {
+                    const checked = saved === key ? 'checked' : '';
+                    
+                    // Option Text aur Image alag karo
+                    let optText = val;
+                    let optImgHTML = "";
+                    
+                    const optLinkMatch = val.match(/\[(https?:\/\/[^\]]+)\]/);
+                    if (optLinkMatch) {
+                        const optImgUrl = optLinkMatch[1];
+                        optText = val.replace(optLinkMatch[0], "").trim();
+                        optImgHTML = `<div style="margin-top:8px;"><img src="${optImgUrl}" style="max-height:150px; max-width:100%; border:1px solid #ccc; border-radius:4px;"></div>`;
+                    }
 
-                optsDiv.innerHTML += `
-                <label class="option-item" style="align-items: flex-start;">
-                    <div style="padding-top:2px;"><input type="radio" name="opt" value="${key}" ${checked}></div>
-                    <div style="margin-left: 10px;">
-                        <strong>(${key})</strong> ${optText}
-                        ${optImgHTML}
-                    </div>
-                </label>`;
-            });
+                    optsDiv.innerHTML += `
+                    <label class="option-item" style="align-items: flex-start;">
+                        <div style="padding-top:2px;"><input type="radio" name="opt" value="${key}" ${checked}></div>
+                        <div style="margin-left: 10px; width:100%;">
+                            <strong>(${key})</strong> ${optText}
+                            ${optImgHTML}
+                        </div>
+                    </label>`;
+                });
+            }
         } else {
+            // Integer Type
             optsDiv.innerHTML = `
             <div class="integer-box">
                 <label>Ans.</label>
@@ -568,118 +587,84 @@
             </div>`;
         }
 
-        // MathJax refresh
         if (window.MathJax) MathJax.typesetPromise();
         updatePalette();
     }
-                }
-                
-                // Text me se link hata do taki wo dubara na dikhe
-                displayText = displayText.replace(linkMatch[0], "").trim();
-            } else if (q.img) {
-                // Agar aapne naye format me img: "" use kiya hai
-                 if(imgContainer) {
-                    const img = document.createElement('img');
-                    img.src = q.img;
-                    img.className = 'q-img';
-                    img.style.maxWidth = "100%";
-                    img.style.maxHeight = "350px";
-                    imgContainer.appendChild(img);
-                 }
-            }
 
-            document.getElementById('q-content').innerHTML = displayText;
-            
-            const optsDiv = document.getElementById('options-area');
-            optsDiv.innerHTML = '';
-            const saved = responses[q.id] || '';
+    // Save & Next
+    function saveNext() {
+        const q = questions[currentQuestionIndex];
+        let val = null;
+        if (q.type === 'MCQ') {
+            const el = document.querySelector('input[name="opt"]:checked');
+            if (el) val = el.value;
+        } else {
+            const inputEl = document.getElementById('int-input');
+            if (inputEl) val = inputEl.value.trim();
+        }
 
-            if (q.type === 'MCQ') {
-                Object.entries(q.opts).forEach(([key, val]) => {
-                    const checked = saved === key ? 'checked' : '';
-                    optsDiv.innerHTML += `
-                    <label class="option-item">
-                        <input type="radio" name="opt" value="${key}" ${checked}>
-                        <span><strong>(${key})</strong> ${val}</span>
-                    </label>`;
-                });
-            } else {
-                optsDiv.innerHTML = `
-                <div class="integer-box">
-                    <label>Ans.</label>
-                    <input type="text" id="int-input" value="${saved}">
-                </div>`;
-            }
+        if (val) {
+            responses[q.id] = val;
+            if (status[q.id] !== 'marked') status[q.id] = 'answered';
+        }
+        nav(1);
+    }
 
-            if (window.MathJax) MathJax.typesetPromise();
+    // Mark for Review
+    function markReview() {
+        const q = questions[currentQuestionIndex];
+        status[q.id] = 'marked';
+        saveNext();
+    }
+
+    // Clear Answer
+    function clearAns() {
+        const q = questions[currentQuestionIndex];
+        delete responses[q.id];
+        status[q.id] = 'visited';
+        loadQ(currentQuestionIndex);
+    }
+
+    // Navigation
+    function nav(dir) {
+        const next = currentQuestionIndex + dir;
+        if (next >= 0 && next < questions.length) {
+            loadQ(next);
+        } else {
             updatePalette();
+            // Optional: alert("Section End");
         }
+    }
 
-        function saveNext() {
-            const q = questions[currentQuestionIndex];
-            let val = null;
-            if (q.type === 'MCQ') {
-                const el = document.querySelector('input[name="opt"]:checked');
-                if (el) val = el.value;
-            } else {
-                const inputEl = document.getElementById('int-input');
-                if (inputEl) val = inputEl.value.trim();
+    // Update Palette Colors
+    function updatePalette() {
+        questions.forEach((q) => {
+            const btn = document.getElementById(`pal-${q.id}`);
+            if(btn) {
+                btn.className = 'p-btn';
+                if (q.id === questions[currentQuestionIndex].id) btn.classList.add('current');
+                
+                const s = status[q.id];
+                if (s === 'answered') btn.classList.add('answered');
+                else if (s === 'marked') btn.classList.add('marked');
+                else if (s === 'visited') btn.classList.add('not-ans');
             }
+        });
+    }
 
-            if (val) {
-                responses[q.id] = val;
-                if (status[q.id] !== 'marked') status[q.id] = 'answered';
-            }
-            nav(1);
-        }
+    // Submit Test
+    function submitTest(force = false) {
+        if (!force && !confirm("Are you sure you want to submit?")) return;
+        examActive = false;
+        clearInterval(interval);
+        document.getElementById('test-ui').style.display = 'none';
+        document.getElementById('score-card').style.display = 'flex';
+        try { document.exitFullscreen().catch(e=>{}); } catch(e){}
 
-        function markReview() {
-            const q = questions[currentQuestionIndex];
-            status[q.id] = 'marked';
-            saveNext();
-        }
-
-        function clearAns() {
-            const q = questions[currentQuestionIndex];
-            delete responses[q.id];
-            status[q.id] = 'visited';
-            loadQ(currentQuestionIndex);
-        }
-
-        function nav(dir) {
-            const next = currentQuestionIndex + dir;
-            if (next >= 0 && next < questions.length) {
-                loadQ(next);
-            } else {
-                updatePalette();
-                alert("End of section. Please switch subjects.");
-            }
-        }
-
-        function updatePalette() {
-            questions.forEach((q) => {
-                const btn = document.getElementById(`pal-${q.id}`);
-                if(btn) {
-                    btn.className = 'p-btn';
-                    if (q.id === questions[currentQuestionIndex].id) btn.classList.add('current');
-                    
-                    const s = status[q.id];
-                    if (s === 'answered') btn.classList.add('answered');
-                    else if (s === 'marked') btn.classList.add('marked');
-                    else if (s === 'visited') btn.classList.add('not-ans');
-                }
-            });
-        }
-
-        function submitTest(force = false) {
-            if (!force && !confirm("Are you sure you want to submit?")) return;
-            examActive = false;
-            clearInterval(interval);
-            document.getElementById('test-ui').style.display = 'none';
-            document.getElementById('score-card').style.display = 'flex';
-            document.exitFullscreen().catch(e=>{});
-
-            let correct = 0, wrong = 0, attempted = 0;
+        let correct = 0, wrong = 0, attempted = 0;
+        
+        // Calculate Score across ALL questions
+        if(typeof allQuestions !== 'undefined') {
             allQuestions.forEach(q => {
                 const userAns = responses[q.id];
                 if (userAns) {
@@ -688,20 +673,23 @@
                     else if (q.type === 'MCQ') wrong++;
                 }
             });
-
-            const totalScore = (correct * 4) - (wrong * 1);
-            const accuracy = attempted ? ((correct / attempted) * 100).toFixed(1) : 0;
-
-            document.getElementById('final-score').innerText = totalScore;
-            document.getElementById('correct-count').innerText = correct;
-            document.getElementById('wrong-count').innerText = wrong;
-            document.getElementById('attempt-count').innerText = attempted;
-            document.getElementById('accuracy').innerText = accuracy + '%';
         }
 
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden && examActive) alert("WARNING: Tab switch detected! Your test is monitored.");
-        });
+        const totalScore = (correct * 4) - (wrong * 1);
+        const maxScore = (typeof allQuestions !== 'undefined') ? allQuestions.length * 4 : 300;
+        const accuracy = attempted ? ((correct / attempted) * 100).toFixed(1) : 0;
+
+        document.getElementById('final-score').innerText = totalScore;
+        document.getElementById('correct-count').innerText = correct;
+        document.getElementById('wrong-count').innerText = wrong;
+        document.getElementById('attempt-count').innerText = attempted;
+        document.getElementById('accuracy').innerText = accuracy + '%';
+    }
+
+    // Anti-cheat
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && examActive) alert("WARNING: Tab switch detected! Your test is monitored.");
+    });
     </script>
 </body>
 </html>
